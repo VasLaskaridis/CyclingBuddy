@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="prune_plum">#473c9f</color>
+    <color name="eggplant">#3c3388</color>
+    <color name="grey">#CFCDCD</color>
+    <color name="dark_grey">#121212</color>
+    <color name="colorAccent">#DB0E52</color>
+    <color name="errorColor">#D50000</color>
+    <color name="white">#ffffff</color>
+    <color name="black">#111111</color>
+</resources>
