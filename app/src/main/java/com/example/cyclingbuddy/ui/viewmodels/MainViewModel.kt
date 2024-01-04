@@ -1,7 +1,9 @@
 package com.example.cyclingbuddy.ui.viewmodels
 
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.Observer
 import com.example.cyclingbuddy.repository.Repository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -16,52 +18,21 @@ import kotlinx.coroutines.launch
 class MainViewModel @Inject constructor(
     val repository: Repository
 ):ViewModel () {
-    private val ridesSortedByDate = repository.getAllRunsSortedByDate()
-    private val ridesSortedByDistance = repository.getAllRunsSortedByDistance()
-    private val ridesSortedByCaloriesBurned = repository.getAllRunsSortedByCaloriesBurned()
-    private val ridesSortedByRunTime = repository.getAllRunsSortedByRunTime()
-    private val ridesSortedByAverageSpeed = repository.getAllRunsSortedByAverageSpeed()
 
-    val rides = MediatorLiveData<List<RideData>>()
+     var _rides: LiveData<List<RideData>>? = null
+    val rides get() = _rides
+
+    val journey=MediatorLiveData<List<JourneyData>>()
 
     var sortingHeader = SortingHeader.DATE
 
     init {
-        rides.addSource(ridesSortedByDate) { result ->
-            if(sortingHeader == SortingHeader.DATE) {
-                result?.let { rides.value = it }
-            }
-        }
-        rides.addSource(ridesSortedByAverageSpeed) { result ->
-            if(sortingHeader == SortingHeader.AVERAGE_SPEED) {
-                result?.let { rides.value = it }
-            }
-        }
-        rides.addSource(ridesSortedByCaloriesBurned) { result ->
-            if(sortingHeader == SortingHeader.CALORIES_BURNED) {
-                result?.let { rides.value = it }
-            }
-        }
-        rides.addSource(ridesSortedByDistance) { result ->
-            if(sortingHeader == SortingHeader.DISTANCE) {
-                result?.let { rides.value = it }
-            }
-        }
-        rides.addSource(ridesSortedByRunTime) { result ->
-            if(sortingHeader == SortingHeader.RUNNING_TIME) {
-                result?.let { rides.value = it }
-            }
-        }
+        getDataRides()
     }
 
-    fun sortRuns(sortType: SortingHeader) = when(sortingHeader) {
-        SortingHeader.DATE -> ridesSortedByDate.value?.let { rides.value = it }
-        SortingHeader.RUNNING_TIME -> ridesSortedByRunTime.value?.let { rides.value = it }
-        SortingHeader.AVERAGE_SPEED -> ridesSortedByAverageSpeed.value?.let { rides.value = it }
-        SortingHeader.DISTANCE -> ridesSortedByDistance.value?.let { rides.value = it }
-        SortingHeader.CALORIES_BURNED -> ridesSortedByCaloriesBurned.value?.let { rides.value = it }
-    }.also {
-        this.sortingHeader = sortingHeader
+    fun getDataRides(): LiveData<List<RideData>>? {
+        _rides =  repository.getAllRunsSortedByDate()
+        return rides
     }
 
     fun insertRun(ride: RideData) = viewModelScope.launch {
@@ -73,5 +44,26 @@ class MainViewModel @Inject constructor(
     }
 
     fun getJourney(timestamp: Long) = repository.getJourney(timestamp)
+
+    fun getJourneyForDelete(timestamp: Long){
+        val journey = MediatorLiveData<List<JourneyData>>()
+        journey.addSource(repository.getJourney(timestamp), Observer {
+            if(it!=null){
+                deleteJourney(journey.value!!.get(0))
+            }
+        })
+    }
+
+    fun deleteRide(ride: RideData){
+        viewModelScope.launch {
+            getJourneyForDelete(ride.runStartTimestamp)
+            repository.deleteRide(ride)
+        }
+    }
+    fun deleteJourney(journey: JourneyData){
+        viewModelScope.launch {
+            repository.deleteJourney(journey)
+        }
+    }
 
 }

@@ -15,18 +15,6 @@ interface RideDataDAO {
     @Query("SELECT * FROM user_rides_table ORDER BY runStartTimestamp DESC")
     fun getAllRunsSortedByDate(): LiveData<List<RideData>>
 
-    @Query("SELECT * FROM user_rides_table ORDER BY runTime DESC")
-    fun getAllRunsSortedByRunTime(): LiveData<List<RideData>>
-
-    @Query("SELECT * FROM user_rides_table ORDER BY caloriesBurned DESC")
-    fun getAllRunsSortedByCaloriesBurned(): LiveData<List<RideData>>
-
-    @Query("SELECT * FROM user_rides_table ORDER BY averageSpeed DESC")
-    fun getAllRunsSortedByAverageSpeed(): LiveData<List<RideData>>
-
-    @Query("SELECT * FROM user_rides_table ORDER BY distance DESC")
-    fun getAllRunsSortedByDistance(): LiveData<List<RideData>>
-
     @Query("SELECT SUM(runTime) FROM user_rides_table")
     fun getTotalRunTime(): LiveData<Long>
 

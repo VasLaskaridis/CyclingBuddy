@@ -1,7 +1,9 @@
 package com.example.cyclingbuddy.ui.fragments
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.Context
+import android.content.DialogInterface
 import android.content.IntentSender
 import android.location.LocationManager
 import android.os.Bundle
@@ -10,6 +12,7 @@ import androidx.fragment.app.Fragment
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
+import androidx.appcompat.view.ContextThemeWrapper
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
@@ -39,7 +42,7 @@ import pub.devrel.easypermissions.PermissionRequest
 class RideFragment : Fragment(R.layout.fragment_ride), EasyPermissions.PermissionCallbacks {
 
     private val viewModel: MainViewModel by viewModels()
-    private lateinit var runAdapter: Adapter
+    private lateinit var rideAdapter: Adapter
 
     private var _binding: FragmentRideBinding? = null
 
@@ -77,18 +80,22 @@ class RideFragment : Fragment(R.layout.fragment_ride), EasyPermissions.Permissio
             override fun onNothingSelected(p0: AdapterView<*>?) {}
 
             override fun onItemSelected(adapterView: AdapterView<*>?, view: View?, pos: Int, id: Long) {
-                when(pos) {
-                    0 -> viewModel.sortRuns(SortingHeader.DATE)
-                    1 -> viewModel.sortRuns(SortingHeader.RUNNING_TIME)
-                    2 -> viewModel.sortRuns(SortingHeader.DISTANCE)
-                    3 -> viewModel.sortRuns(SortingHeader.AVERAGE_SPEED)
-                    4 -> viewModel.sortRuns(SortingHeader.CALORIES_BURNED)
+                if(rideAdapter.rideList!=null){
+                    when(pos) {
+                        0 -> rideAdapter.sortRideList(SortingHeader.DATE)
+                        1 -> rideAdapter.sortRideList(SortingHeader.RUNNING_TIME)
+                        2 -> rideAdapter.sortRideList(SortingHeader.DISTANCE)
+                        3 -> rideAdapter.sortRideList(SortingHeader.AVERAGE_SPEED)
+                        4 -> rideAdapter.sortRideList(SortingHeader.CALORIES_BURNED)
+                    }
                 }
             }
         }
 
-        viewModel.rides.observe(viewLifecycleOwner, Observer {
-            runAdapter.submitList(it)
+        viewModel.getDataRides()!!.observe(viewLifecycleOwner, object : Observer<List<RideData>> {
+            override fun onChanged(list: List<RideData>) {
+                rideAdapter.submitList(list)
+            }
         })
 
         binding.fab.setOnClickListener {
@@ -97,10 +104,10 @@ class RideFragment : Fragment(R.layout.fragment_ride), EasyPermissions.Permissio
     }
 
     private fun setupRecyclerView() = binding.ridesRv.apply {
-        runAdapter = Adapter()
-        adapter = runAdapter
+        rideAdapter = Adapter()
+        adapter = rideAdapter
         layoutManager = LinearLayoutManager(requireContext())
-        runAdapter.setRideClickListener(object:Adapter.onRideClickListener{
+        rideAdapter.setRideClickListener(object:Adapter.onRideClickListener{
             override fun onRideClick(ride: RideData, position: Int) {
                 val bundle =Bundle()
                 bundle.putLong("timestamp", ride.runStartTimestamp)
@@ -112,10 +119,19 @@ class RideFragment : Fragment(R.layout.fragment_ride), EasyPermissions.Permissio
                 findNavController().navigate(R.id.action_rideFragment_to_journeyFragment,bundle)
             }
         })
+        rideAdapter.setDeleteClickListener(object:Adapter.onDeleteClickListener{
+            override fun onDeleteClick(ride: RideData, position: Int) {
+                showDeleteDialog(ride)
+            }
+
+        })
     }
 
     private fun requestPermissions() {
         if(TrackingUtility.hasLocationPermissions(requireContext())) {
+            if (!isGPSEnabled()) {
+                turnOnGPS()
+            }
             return
         }
         else {
@@ -162,7 +178,6 @@ class RideFragment : Fragment(R.layout.fragment_ride), EasyPermissions.Permissio
     }
 
     private fun turnOnGPS() {
-
         var locationRequest = LocationRequest.create()
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
         locationRequest.setInterval(5000)
@@ -182,5 +197,21 @@ class RideFragment : Fragment(R.layout.fragment_ride), EasyPermissions.Permissio
                 }
             }
         }
+    }
+
+    fun showDeleteDialog(ride: RideData) {
+        val dialog = AlertDialog.Builder(ContextThemeWrapper(requireContext(),R.style.AlertDialogTheme))
+        dialog.setMessage("Do you want to delete this ride?")
+        dialog.setPositiveButton("YES", object: DialogInterface.OnClickListener{
+            override fun onClick(dialog: DialogInterface?, which: Int) {
+                viewModel.deleteRide(ride)
+            }
+        })
+        dialog.setNegativeButton("No",object: DialogInterface.OnClickListener{
+            override fun onClick(dialog: DialogInterface?, which: Int) {}
+        })
+        dialog.setCancelable(true)
+        val alert = dialog.create()
+        alert.show()
     }
 }

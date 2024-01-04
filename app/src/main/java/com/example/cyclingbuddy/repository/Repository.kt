@@ -1,5 +1,7 @@
 package com.example.cyclingbuddy.repository
 
+
+import androidx.lifecycle.LiveData
 import com.example.cyclingbuddy.db.Journey.JourneyData
 import com.example.cyclingbuddy.db.Journey.JourneyDataDao
 import com.example.cyclingbuddy.db.Ride.RideDataDAO
@@ -14,15 +16,7 @@ class Repository @Inject constructor(
 
     suspend fun deleteRide(rideData: RideData) = rideDao.deleteRun(rideData)
 
-    fun getAllRunsSortedByDate() = rideDao.getAllRunsSortedByDate()
-
-    fun getAllRunsSortedByDistance() = rideDao.getAllRunsSortedByDistance()
-
-    fun getAllRunsSortedByRunTime() = rideDao.getAllRunsSortedByRunTime()
-
-    fun getAllRunsSortedByAverageSpeed() = rideDao.getAllRunsSortedByAverageSpeed()
-
-    fun getAllRunsSortedByCaloriesBurned() = rideDao.getAllRunsSortedByCaloriesBurned()
+    fun getAllRunsSortedByDate(): LiveData<List<RideData>>  { return rideDao.getAllRunsSortedByDate() }
 
     fun getTotalAverageSpeed() = rideDao.getTotalAverageSpeed()
 

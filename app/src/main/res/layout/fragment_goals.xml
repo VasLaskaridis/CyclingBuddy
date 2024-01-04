@@ -13,9 +13,10 @@
         android:textAlignment="center"
         android:textColor="@color/black"
         android:textSize="24sp"
-        app:layout_constraintLeft_toLeftOf="@+id/email_tv"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/email_tv" />
+        app:layout_constraintBottom_toTopOf="@+id/email_tv"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/email_tv"
@@ -48,7 +49,7 @@
             android:background="@color/grey"
             android:ems="10"
             android:hint="youremail@gmail.com"
-            android:inputType="numberDecimal" />
+            android:inputType="textEmailAddress" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
